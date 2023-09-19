@@ -1,0 +1,40 @@
+---
+title: "DICE eQTL hierarchical clustering (figure 2)"
+author: "nicholaspudjihartono"
+date: "2023-09-19"
+output: html_document
+---
+
+# Load required libraries
+```{r}
+library(tidyverse)
+library(pheatmap)
+```
+
+# Load input matrix
+Note: This is the "DICE_matrix.csv" file output produced from running /scripts/analysis_scripts/Immune_cell_eQTL_analysis.ipynb
+
+```{r}
+input_matrix <- read.csv('DICE_matrix.csv')
+input_matrix
+```
+
+# Remove the first two columns 
+```{r}
+input_matrix <- input_matrix[,-c(1,2,19)]
+input_matrix
+```
+
+# Make the first column as the row
+
+```{r}
+input_matrix <- input_matrix %>% column_to_rownames('IV.SNP...exposure.gene')
+
+input_matrix
+```
+
+
+# Make the hierarchical clustering heatmap 
+```{r}
+heatmap_1 <- pheatmap(input_matrix,cellheight=12, cellwidth = 12, color=colorRampPalette(c("#82abc5","#8ebdd9","#fffff0", "#fecca6","#fc8d59"))(100), filename = 'DICE_eQTL_hierarchical_clustering.pdf')
+```
