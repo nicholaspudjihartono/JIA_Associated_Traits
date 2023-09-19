@@ -1,0 +1,78 @@
+---
+title: "MR_analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Install and load required libraries
+```{r}
+install_github("MRCIEU/MRInstruments")
+library(TwoSampleMR)
+```
+
+NOTE : guide for using TwoSampleMR R package is explained in the documentation -->https://mrcieu.github.io/TwoSampleMR/articles/exposure.html
+
+# Load the exposure
+```{r}
+exposure_GRN <- "whole_blood_GRN.txt"
+exposure = read_exposure_data(filename=exposure_GRN, sep = "\t",snp_col = "snp",beta_col = "beta",se_col = "beta_se",effect_allele_col = "alt",other_allele_col = "ref",phenotype_col = "gene",eaf="maf",pval_col = "eqtl_pval")
+```
+
+
+# LD clumping
+Note: For standard two sample MR it is important to ensure that the instruments for an exposure gene are independent. This is important because correlated SNPs can lead to double counting and as a consequence, biased causal effect estimates. To prune for LD, the clump_data function can be used.
+```{r}
+exposure_clumped <- clump_data(exposure, clump_r2 = 0.001)
+```
+
+#Load the outcome data
+Note: GWAS summary statistic used for the outcome (GCST90010715_buildGRCh37_2.tsv) can be found under "data" folder.
+```{r}
+outcome_JIA <- read_outcome_data(
+    snps = exposure_clumped_local$SNP,
+    filename = "GCST90010715_buildGRCh37_2.tsv",
+    sep = "\t",
+    snp_col = "variant_id",
+    beta_col = "frequentist_add_beta_1",
+    se_col = "frequentist_add_se_1",
+    effect_allele_col = "alleleB",
+    other_allele_col = "alleleA",
+    eaf_col = "all_maf",
+    pval_col = "p_value")
+```
+
+# Harmonise the data
+Note: The purpose of data harmonization in the context of two-sample MR is to ensure that the data from different sources is compatible and can be effectively combined and analyzed. Harmonization ensures that the effect directions are consistent between the exposure (spatial eQTL effects from the GRN) and outcome datasets (GWAS summary statistics). The output is similar to Supplementary Table 11.
+```{r}
+harmonised_data <- harmonise_data(exposure_dat = exposure_clumped_local, outcome_dat = outcome_JIA)
+View(harmonised_data)
+
+
+# Lets save this "harmonised_data" data.frame as a tsv file
+write.table(harmonised_data, "harmonised_data.tsv", sep = "\t", row.names = FALSE)
+```
+
+
+# MR analysis
+Once the exposure and outcome data are harmonised, we have effect estimates and standard errors for each SNP available for the exposure and outcome traits. We can use this information to perform MR. 
+```{r}
+MR_results <- mr(harmonised_data)
+```
+
+#Bonferroni correction
+To control for multiple testing. We adjust the significant p-value threshold by 0.05/number of unique exposure genes.
+We have 13640 unique exposures, so the P-value threshold we choose will be 0.05/13,640 = 3.665689e-06.
+```{r}
+significant_MR_results <- MR_results[MR_results$pval <= 3.665689e-06,]
+```
+
+#Save the result as tsv
+Note: This is the same as Supplementary Table 2
+```{r}
+write.table(significant_MR_results, "significant_MR_results.tsv", sep = "\t", row.names = FALSE)
+```
+
+
