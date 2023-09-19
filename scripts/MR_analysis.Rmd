@@ -29,7 +29,8 @@ exposure_clumped <- clump_data(exposure, clump_r2 = 0.001)
 ```
 
 #Load the outcome data
-Note: GWAS summary statistic used for the outcome (GCST90010715_buildGRCh37_2.tsv) can be found under "data" folder.
+Note: GWAS summary statistic used for the outcome (GCST90010715_buildGRCh37_2.tsv) can be downloaded from the GWAS catalog website (https://www.ebi.ac.uk/ gwas/ downloads/ summary- statistics) (Study Accession Code : GCST90010715).
+
 ```{r}
 outcome_JIA <- read_outcome_data(
     snps = exposure_clumped_local$SNP,
