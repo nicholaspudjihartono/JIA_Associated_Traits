@@ -1,0 +1,47 @@
+---
+title: "Multimorbid3D SNP-gene-trait clustering"
+author: "nicholaspudjihartono"
+date: "2023-09-19"
+output: html_document
+---
+
+# Load the required libraries
+```{r}
+library(tidyverse)
+library(cowplot)
+library(pheatmap)
+library(RColorBrewer)
+library(readxl)
+```
+
+# Load multimorbid SNP-gene-trait clustering input
+Note : This is the output file produced in scripts/analysis_scripts/Multimorbid3D_SNP-gene-trait_clustering.ipynb
+```{r}
+input <- read.csv("Multimorbid3D_SNP-gene-trait_clustering.csv")
+```
+
+
+# Make the first column ('Trait') into the index of the dataframe -> create a matrix
+```{r}
+input <- input %>% column_to_rownames('Trait')
+```
+
+# log transform the dataframe 
+```{r}
+input_log <- input + 1
+input_log <-log10(input_log)
+```
+
+# Plot heatmap
+```{r}
+output <- pheatmap(input_log,
+          color = colorRampPalette (c ("white", "red")) (20), #keep "white" to make sure zeros are not coloured, change the number to maximum eqtls in your file. 
+          cluster_cols = T, # clusters gene columns
+          cluster_rows = T,
+          cellheight = 9, # specifies size of individual heatmap cells
+          cellwidth = 9,
+          fontsize = 8,
+          treeheight_col = 230,
+          #treeheight_row = 100,
+          filename = "SNP-gene-trait_clustering.pdf")
+```
