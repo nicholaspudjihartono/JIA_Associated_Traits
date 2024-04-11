@@ -1,1 +1,1 @@
-# JIA_comorbidity_repo
+# JIA_Associated_Traits
